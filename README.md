@@ -40,3 +40,7 @@ Note: amplify delete to wipe backend and start fresh
 4. amplify push --y to push to aws server
 5. amplify console
 6. 
+
+### add api
+1. amplify add api
+2. GraphQL,notesapp,API Key, demo, 7, done, No, Yes, Single object with fields, Yes
