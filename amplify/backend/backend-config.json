@@ -1,0 +1,10 @@
+{
+  "auth": {
+    "mdgmockportal1a7bb6de": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}

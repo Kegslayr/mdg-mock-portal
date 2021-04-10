@@ -1,3 +1,7 @@
+### commands
+build: npm run-script build
+run: npm run-script start
+
 ### deploy to amplify
 1. Log in to AWS
 2. Go to Amplify
@@ -17,10 +21,22 @@
 8. paste secret access key into prompt
 9. leave profile name as default
 
+### initialize amplify app
+1. go to back end tab in ui
+2. click Get Started button
+3. open admin ui button from staging area
+4. go back to amplify console
+5. expand local setup instructions
+6. copy amplify pull command
+7. paste and run in terminal
+8. upgrade amplify if it fails
+9. vs code, javascript, react, src, build, npm run-script build, npm run-script start, Y
+
 ### install a backend for authz
 Note: amplify delete to wipe backend and start fresh
 1. npm install aws-amplify @aws-amplify/ui-react
 2. init amplify if not done from root dir - amplify init (select defaults except for region)
 3. amplify add auth - default, email, done (amplify update auth if exists)
 4. amplify push --y to push to aws server
-5. 
+5. amplify console
+6. 
