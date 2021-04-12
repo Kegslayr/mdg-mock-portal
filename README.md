@@ -2,6 +2,10 @@
 build: npm run-script build
 run: npm run-script start
 
+### issues
+deploy backend may requrire adding amplify service role - https://github.com/aws-amplify/amplify-console/issues/1345
+deploy backend with auth may require setting amplify cli to latest version - https://github.com/aws-amplify/amplify-cli/issues/6117
+
 ### deploy to amplify
 1. Log in to AWS
 2. Go to Amplify
