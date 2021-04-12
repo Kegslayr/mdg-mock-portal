@@ -23,7 +23,7 @@ import TextField from '@material-ui/core/TextField';
 import { DataGrid } from '@material-ui/data-grid';
 import { v4 as uuidv4 } from 'uuid'; 
 
-const initialFormState = { name: '', description: ''}
+const initialFormState = { name: '', description: '', owner: ''}
 const ADMIN_USER = "mdg0501@gmail.com";
 const columns = [
   { field: 'name', headerName: 'Name', width: 250 },
@@ -79,6 +79,7 @@ function App() {
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
   const [currentImage, setCurrentImage] = useState(false);
   const [image, setImage] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     authorizeUser();
@@ -90,7 +91,8 @@ function App() {
 
   async function authorizeUser() {
     const userInfo = await API.Auth.currentUserInfo();
-    setAdmin(userInfo.attributes.email !== ADMIN_USER);
+    setEmail(userInfo.attributes.email);
+    setAdmin(email === ADMIN_USER);
   }
 
   async function fetchNotes() {
@@ -103,11 +105,13 @@ function App() {
       }
       return note;
     }))
-    setNotes(apiData.data.listNotes.items);
+    const filteredNotes = apiData.data.listNotes.items.filter(x => x.owner === email);
+    setNotes(filteredNotes);
   }
 
   async function createNote() {
     if (!formData.name || !formData.description) return;
+    formData.owner = email;
     await API.graphql({ query: createNoteMutation, variables: { input: formData }});
     if (formData.image) {
       const image = await Storage.get(formData.image);
@@ -115,6 +119,7 @@ function App() {
     }
     if (!formData.id)
       formData.id = uuidv4();
+    formData.owner = email;
     setNotes([ ...notes, formData ]);
     setFormData(initialFormState);
     fetchNotes();
@@ -195,7 +200,22 @@ function App() {
                 </Grid>
                 <Grid item xs={12} md={4} lg={3}>
                   <Paper className={fixedHeightPaper}>
-                    <User />
+                    <Typography component="h2" variant="h6" color="primary" gutterBottom>Portal User</Typography>
+                    <div>
+                      <Typography component="p" variant="h6">Username:</Typography>
+                    </div>
+                    <div>
+                      <Typography className={classes.userText} component="p">{email}</Typography>
+                    </div>
+                    <div>
+                      <Typography component="p" variant="h6">Email:</Typography>
+                    </div>
+                    <div>
+                      <Typography className={classes.userText} component="p">{email}</Typography>
+                    </div>
+                    <div style={{ marginTop: 10, width:50}}>
+                      <AmplifySignOut/>
+                    </div>
                   </Paper>
                 </Grid>
                 <Grid item xs={12}>

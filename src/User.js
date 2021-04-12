@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { makeStyles, ThemeProvider, useTheme} from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import { AmplifySignOut } from '@aws-amplify/ui-react';
+import { AmplifySignOut, withAuthenticator } from '@aws-amplify/ui-react';
+import { API, Storage } from 'aws-amplify';
 
 
 function preventDefault(event) {
@@ -17,9 +18,18 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export default function User() {
+function User() {
     const classes = useStyles();
-    const userName = "mdg0501@gmail.com";
+    const [email, setEmail] = useState('');
+
+    useEffect(() => {
+        getUser();
+    }, []);
+
+    async function getUser() {
+        const userInfo = API.Auth.currentUserInfo();
+        setEmail(userInfo.attributes.email);
+    }
 
     return (
         <React.Fragment>
@@ -33,7 +43,7 @@ export default function User() {
             </div>
             <div>
                 <Typography className={classes.userText} component="p">
-                    {userName}
+                    {email}
                 </Typography>
             </div>
             <div>
@@ -43,7 +53,7 @@ export default function User() {
             </div>
             <div>
                 <Typography className={classes.userText} component="p">
-                    {userName}
+                    {email}
                 </Typography>
             </div>
             <div style={{ marginTop: 10, width:50}}>
@@ -52,3 +62,5 @@ export default function User() {
         </React.Fragment>
     );
 }
+
+export default withAuthenticator(User);
