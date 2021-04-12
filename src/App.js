@@ -6,14 +6,25 @@ import {withAuthenticator, AmplifySignOut} from '@aws-amplify/ui-react';
 //import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
 
 const initialFormState = { name: '', description: ''}
+const ADMIN_USER = "mdg0501@gmail.com";
 
 function App() {
+  const [admin, setAdmin] = useState(false);
   //const [notes, setNotes] = useState([]);
   //const [formData, setFormData] = useState(initialFormState);
 
   useEffect(() => {
+    authorizeUser();
+  }, []);
+
+  useEffect(() => {
     fetchNotes();
   }, []);
+
+  async function authorizeUser() {
+    const userInfo = await API.Auth.currentUserInfo();
+    setAdmin(userInfo.attributes.email === ADMIN_USER);
+  }
 
   async function fetchNotes() {
     //const apiData = await API.graphql({query: listNotes});
@@ -35,7 +46,13 @@ function App() {
 
   return (
     <div className="App">
-      <h1>My Notes App</h1>
+      <h1>Point of Care App</h1>
+      {admin === true && 
+        <h2>Admin user!</h2>
+      }
+      {admin === false &&
+        <h2>Non Admin user!</h2>
+      }
       <AmplifySignOut />
     </div>
   );
