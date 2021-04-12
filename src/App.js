@@ -36,28 +36,6 @@ function App() {
   return (
     <div className="App">
       <h1>My Notes App</h1>
-      <input 
-        onChange={e => setFormData({...setFormData, 'name': e.target.value})}
-        placeholder= "Note name"
-        value={formData.name}
-      />
-      <input
-        onChange={e => setFormData({...formData, 'description': e.target.value})}
-        placeholder="Note description"
-        value={formData.description}
-      />
-      <button onClick={createNote}>Create Note</button>
-      <div style={{marginBottom:30}}>
-        {
-          notes.map(note => (
-            <div key={note.id || note.name}>
-              <h2>{note.name}</h2>
-              <p>{note.description}</p>
-              <button onClick={() => deleteNote(note)}>Delete note</button>
-            </div>
-          ))
-        }
-      </div>
       <AmplifySignOut />
     </div>
   );
