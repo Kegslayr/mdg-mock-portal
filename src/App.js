@@ -12,9 +12,23 @@ import Badge from '@material-ui/core/Badge';
 import NotificationsIcon from '@material-ui/icons/Notifications';
 import Toolbar from '@material-ui/core/Toolbar';
 import MenuIcon from '@material-ui/icons/Menu';
+import Container from '@material-ui/core/Container';
+import Grid from '@material-ui/core/Grid';
+import Paper from '@material-ui/core/Paper';
+import clsx from 'clsx';
+import User from './User';
+import Button from '@material-ui/core/Button';
+import Input from '@material-ui/core/Input';
+import TextField from '@material-ui/core/TextField';
+import { DataGrid } from '@material-ui/data-grid';
+import { v4 as uuidv4 } from 'uuid'; 
 
 const initialFormState = { name: '', description: ''}
 const ADMIN_USER = "mdg0501@gmail.com";
+const columns = [
+  { field: 'name', headerName: 'Name', width: 250 },
+  { field: 'description', headerName: 'Description', flex: 1 },
+];
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -37,6 +51,24 @@ const useStyles = makeStyles((theme) => ({
       display: 'flex',
     },
   },
+  container: {
+    paddingTop: theme.spacing(4),
+    paddingBottom: theme.spacing(4),
+  },
+  paper: {
+    padding: theme.spacing(2),
+    display: 'flex',
+    overflow: 'auto',
+    flexDirection: 'column',
+  },
+  fixedHeight: {
+    height: 240,
+  },
+  buttons: {
+    width: 100,
+    marginBottom: 10,
+  },
+  appBarSpacer: theme.mixins.toolbar,
 }));
 
 function App() {
@@ -44,6 +76,9 @@ function App() {
   const [admin, setAdmin] = useState(false);
   const [notes, setNotes] = useState([]);
   const [formData, setFormData] = useState(initialFormState);
+  const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
+  const [currentImage, setCurrentImage] = useState(false);
+  const [image, setImage] = useState('');
 
   useEffect(() => {
     authorizeUser();
@@ -60,6 +95,14 @@ function App() {
 
   async function fetchNotes() {
     const apiData = await API.graphql({query: listNotes});
+    const notesFromAPI = apiData.data.listNotes.items;
+    await Promise.all(notesFromAPI.map(async note => {
+      if (note.image) {
+        const image = await Storage.get(note.image);
+        note.image = image;
+      }
+      return note;
+    }))
     setNotes(apiData.data.listNotes.items);
   }
 
@@ -70,8 +113,12 @@ function App() {
       const image = await Storage.get(formData.image);
       formData.image = image;
     }
+    if (!formData.id)
+      formData.id = uuidv4();
     setNotes([ ...notes, formData ]);
     setFormData(initialFormState);
+    fetchNotes();
+    setImage(false);
   }
 
   async function deleteNote({id}) {
@@ -86,6 +133,13 @@ function App() {
     setFormData({...formData, image: file.name});
     await Storage.put(file.name, file);
     fetchNotes();
+  }
+
+  function onRowClick(rowData) {
+    if (rowData.row.image !== '') {
+      setCurrentImage(true);
+      setImage(rowData.row.image);
+    }
   }
 
   return (
@@ -104,47 +158,69 @@ function App() {
                 Point of Care Patient Portal
               </Typography>
               <IconButton color="inherit">
-                <Badge badgeContent={1} color="secondary">
+                <Badge badgeContent={0} color="secondary">
                   <NotificationsIcon></NotificationsIcon>
                 </Badge>
               </IconButton>
             </Toolbar>
           </AppBar>
           <main className={classes.content}>
-
+            <div className={classes.appBarSpacer}/>
+            <Container maxWidth="lg" className={classes.container}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={8} lg={9}>
+                  <Paper className={fixedHeightPaper}>
+                    <TextField
+                      required={true}
+                      variant="outlined"
+                      onChange={e => setFormData({ ...formData, 'name': e.target.value})}
+                      placeholder="Create a new note"
+                      value={formData.name}
+                      style={{width: 300, marginBottom: 10}}
+                    />
+                    <TextField
+                      variant="outlined"
+                      onChange={e => setFormData({ ...formData, 'description': e.target.value})}
+                      placeholder="Note description"
+                      value={formData.description}
+                      style={{width: 400, marginBottom: 10}}
+                    />
+                    <Button variant="contained" color="primary" onClick={createNote} className={classes.buttons}>Create</Button>
+                    <Input
+                      type="file"
+                      onChange={onChange}
+                      color="primary"
+                    />
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={4} lg={3}>
+                  <Paper className={fixedHeightPaper}>
+                    <User />
+                  </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper className={classes.paper}>
+                    <div style={{height: 250, width: '100%' }}>
+                      <DataGrid 
+                        rows={notes}
+                        columns={columns}
+                        pageSize={5}
+                        onRowClick={(rowData) => onRowClick(rowData)}
+                        disableSelectionOnClick={true}
+                      />
+                    </div>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper className={classes.paper}>
+                    { currentImage && <img src={image} /> }
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Container>
           </main>
-          <input
-            onChange={e => setFormData({ ...formData, 'name': e.target.value})}
-            placeholder="Note name"
-            value={formData.name}
-          />
-          <input
-            onChange={e => setFormData({ ...formData, 'description': e.target.value})}
-            placeholder="Note description"
-            value={formData.description}
-          />
-          <button onClick={createNote}>Create Note</button>
-          <input
-            type="file"
-            onChange={onChange}
-          />
-          <div style={{marginBottom: 30}}>
-            {
-              notes.map(note => (
-                <div key={note.id || note.name}>
-                  <h2>{note.name}</h2>
-                  <p>{note.description}</p>
-                  <button onClick={() => deleteNote(note)}>Delete note</button>
-                  {
-                    note.image && <img src={note.image} style={{width:400}} />
-                  }
-                </div>
-              ))
-            }
-          </div>
         </div>
       }
-      <AmplifySignOut />
     </div>
   );
 }
