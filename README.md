@@ -48,3 +48,8 @@ Note: amplify delete to wipe backend and start fresh
 ### add api
 1. amplify add api
 2. GraphQL,notesapp,API Key, demo, 7, done, No, Yes, Single object with fields, Yes
+
+### add storage
+1. amplify add storage
+2. Content,imagestorage(name),default bucket name, Auth users only, full crud, No lambda trigger
+3. amplify push

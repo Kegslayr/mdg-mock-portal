@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
-import { API } from 'aws-amplify';
+import { API, Storage } from 'aws-amplify';
 import {withAuthenticator, AmplifySignOut} from '@aws-amplify/ui-react';
 import { listNotes } from './graphql/queries';
 import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
@@ -34,6 +34,10 @@ function App() {
   async function createNote() {
     if (!formData.name || !formData.description) return;
     await API.graphql({ query: createNoteMutation, variables: { input: formData }});
+    if (formData.image) {
+      const image = await Storage.get(formData.image);
+      formData.image = image;
+    }
     setNotes([ ...notes, formData ]);
     setFormData(initialFormState);
   }
@@ -42,6 +46,14 @@ function App() {
     const newNoteArray = notes.filter(note => note.id !== id);
     setNotes(newNoteArray);
     await API.graphql({query: deleteNoteMutation, variables: {input: {id}}});
+  }
+
+  async function onChange(e) {
+    if (!e.target.files[0]) return;
+    const file = e.target.files[0];
+    setFormData({...formData, image: file.name});
+    await Storage.put(file.name, file);
+    fetchNotes();
   }
 
   return (
@@ -64,6 +76,10 @@ function App() {
             value={formData.description}
           />
           <button onClick={createNote}>Create Note</button>
+          <input
+            type="file"
+            onChange={onChange}
+          />
           <div style={{marginBottom: 30}}>
             {
               notes.map(note => (
@@ -71,6 +87,9 @@ function App() {
                   <h2>{note.name}</h2>
                   <p>{note.description}</p>
                   <button onClick={() => deleteNote(note)}>Delete note</button>
+                  {
+                    note.image && <img src={note.image} style={{width:400}} />
+                  }
                 </div>
               ))
             }
