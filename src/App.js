@@ -51,7 +51,7 @@ function App() {
         <h2>Admin user!</h2>
       }
       {admin === false &&
-        <h2>Non Admin user!</h2>
+        <h2>Non Admin user</h2>
       }
       <AmplifySignOut />
     </div>
