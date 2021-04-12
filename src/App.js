@@ -4,11 +4,43 @@ import { API, Storage } from 'aws-amplify';
 import {withAuthenticator, AmplifySignOut} from '@aws-amplify/ui-react';
 import { listNotes } from './graphql/queries';
 import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
+import { makeStyles } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import { Typography } from '@material-ui/core';
+import IconButton from '@material-ui/core/IconButton';
+import Badge from '@material-ui/core/Badge';
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import Toolbar from '@material-ui/core/Toolbar';
+import MenuIcon from '@material-ui/icons/Menu';
 
 const initialFormState = { name: '', description: ''}
 const ADMIN_USER = "mdg0501@gmail.com";
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    display: 'flex',
+  },
+  menuButton: {
+    marginRight: theme.spacing(2),
+  },
+  title: {
+    flexGrow: 1,
+  },
+  content: {
+    flexGrow: 1,
+    height: '100vh',
+    overflow: 'auto',
+  },
+  notifications: {
+    display: 'none',
+    [theme.breakpoints.up('md')]: {
+      display: 'flex',
+    },
+  },
+}));
+
 function App() {
+  const classes = useStyles();
   const [admin, setAdmin] = useState(false);
   const [notes, setNotes] = useState([]);
   const [formData, setFormData] = useState(initialFormState);
@@ -57,14 +89,30 @@ function App() {
   }
 
   return (
-    <div className="App">
-      <h1>Point of Care App</h1>
+    <div className="classes.root">
       {admin === true && 
         <h2>Admin user!</h2>
       }
       {admin === false &&
         <div>
-          <h2>Non Admin user</h2>
+          <AppBar position="static">
+            <Toolbar>
+              <IconButton edge="start" className={classes.menuButton} color="inherit">
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" className={classes.title}>
+                Point of Care Patient Portal
+              </Typography>
+              <IconButton color="inherit">
+                <Badge badgeContent={1} color="secondary">
+                  <NotificationsIcon></NotificationsIcon>
+                </Badge>
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+          <main className={classes.content}>
+
+          </main>
           <input
             onChange={e => setFormData({ ...formData, 'name': e.target.value})}
             placeholder="Note name"
