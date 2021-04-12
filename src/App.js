@@ -6,7 +6,7 @@ import { listNotes } from './graphql/queries';
 import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
 import { makeStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
-import { Typography } from '@material-ui/core';
+import { Typography, useForkRef } from '@material-ui/core';
 import IconButton from '@material-ui/core/IconButton';
 import Badge from '@material-ui/core/Badge';
 import NotificationsIcon from '@material-ui/icons/Notifications';
@@ -68,6 +68,10 @@ const useStyles = makeStyles((theme) => ({
     width: 100,
     marginBottom: 10,
   },
+  searchButton: {
+    width: 100,
+    marginTop: 10,
+  },
   appBarSpacer: theme.mixins.toolbar,
 }));
 
@@ -80,6 +84,7 @@ function App() {
   const [currentImage, setCurrentImage] = useState(false);
   const [image, setImage] = useState('');
   const [email, setEmail] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     authorizeUser();
@@ -92,10 +97,15 @@ function App() {
   async function authorizeUser() {
     const userInfo = await API.Auth.currentUserInfo();
     setEmail(userInfo.attributes.email);
-    setAdmin(email === ADMIN_USER);
+    setAdmin(userInfo.attributes.email === ADMIN_USER);
   }
 
   async function fetchNotes() {
+    let userEmail = email;
+    if (userEmail === '') {
+      const userInfo = await API.Auth.currentUserInfo();
+      userEmail = userInfo.attributes.email;
+    }
     const apiData = await API.graphql({query: listNotes});
     const notesFromAPI = apiData.data.listNotes.items;
     await Promise.all(notesFromAPI.map(async note => {
@@ -105,8 +115,17 @@ function App() {
       }
       return note;
     }))
-    const filteredNotes = apiData.data.listNotes.items.filter(x => x.owner === email);
-    setNotes(filteredNotes);
+    // filter the notes for non admins
+    if (admin) {
+      // are we filtering
+      if (search !== '')
+        setNotes(apiData.data.listNotes.items.filter(x => x.name.includes(search)));
+      else
+        setNotes(apiData.data.listNotes.items);
+    } else {
+      const filteredNotes = apiData.data.listNotes.items.filter(x => x.owner === userEmail);
+      setNotes(filteredNotes);
+    }
   }
 
   async function createNote() {
@@ -147,10 +166,67 @@ function App() {
     }
   }
 
+  function searchNotes(filter) {
+    setSearch(filter);
+    fetchNotes();
+  }
+
   return (
     <div className="classes.root">
       {admin === true && 
-        <h2>Admin user!</h2>
+        <div>
+          <AppBar position="static">
+            <Toolbar>
+              <IconButton edge="start" className={classes.menuButton} color="inherit">
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" className={classes.title}>
+                Point of Care Administrator Portal: {email}
+              </Typography>
+              <IconButton color="inherit">
+                <Badge badgeContent={0} color="secondary">
+                  <NotificationsIcon></NotificationsIcon>
+                </Badge>
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+          <main className={classes.content}>
+            <div className={classes.appBarSpacer}/>
+            <Container maxWidth="lg" className={classes.container}>
+              <Grid container spacing={3}>
+                <Grid item xs={12}>
+                  <TextField
+                    variant="outlined"
+                    onChange={e => searchNotes(e.target.value)}
+                    placeholder="Search"
+                    value={search}
+                    style={{width: 300, marginRight: 10}}
+                  />
+                  <Button variant="contained" color="primary" onClick={e => searchNotes(e.target.value)} className={classes.buttons}>Search</Button>
+
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper className={classes.paper}>
+                    <div style={{height: 250, width: '100%' }}>
+                      <DataGrid 
+                        rows={notes}
+                        columns={columns}
+                        pageSize={5}
+                        onRowClick={(rowData) => onRowClick(rowData)}
+                        disableSelectionOnClick={true}
+                      />
+                    </div>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                  <Paper className={classes.paper}>
+                    { currentImage && <img src={image} /> }
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Container>
+          </main>
+        </div>
       }
       {admin === false &&
         <div>
